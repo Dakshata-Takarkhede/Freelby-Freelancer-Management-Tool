@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser"
 const app = express()
 
 app.use(cors({
-    origin: 'https://freelby-project-frontend.vercel.app/',
+    origin: 'https://freelby-project-frontend.vercel.app',
     credentials: true
 }))
 
