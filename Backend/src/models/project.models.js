@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { User } from "./user.models.js";
+import { ApiError } from "../utils/ApiError.js";
 
 const projectSchema = new mongoose.Schema(
   {
@@ -14,23 +16,21 @@ const projectSchema = new mongoose.Schema(
     },
 
     owner: {
-      type: String, // Firebase uid of the project owner
+      type: mongoose.Schema.Types.ObjectId, //id of the project owner
       required: true,
       ref: "User", // Referencing the User model
     },
 
     assignedBy: {
-      type: String, // Firebase uid of the person who assigned the project
+      type: mongoose.Schema.Types.ObjectId, //id of the person who assigned the project
       ref: "User",
-      required: true,
-    },
+      // required: true,
+    },//client
 
-    teamMembers: [
-      {
-        type: String, // Firebase UIDs of team members
-        ref: "User",
-      },
-    ], // Array of Firebase uids for team members
+    teamMembers: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    }],
 
     projectType: {
       type: String,
@@ -69,5 +69,28 @@ const projectSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+
+projectSchema.pre('save', async function(next) {
+  // const assignerExists = await User.exists({ _id: this.assignedBy });
+  // if (!assignerExists) {
+  //   throw new ApiError(400, 'Assigned user does not exist.');
+  // }
+
+  for (let memberId of this.teamMembers) {
+    const memberExists = await User.exists({ _id: memberId });
+    if (!memberExists) {
+      throw new ApiError(400, `User with ID ${memberId} does not exist.`);
+    }
+  }
+
+    // Ensure the deadline is in the future
+  //   if (new Date(this.deadline) <= new Date()) {
+  //     throw new ApiError(400, 'The deadline must be a future date.');
+  // }
+
+  next();
+});
+
 
 export const Project = mongoose.model("Project", projectSchema);
